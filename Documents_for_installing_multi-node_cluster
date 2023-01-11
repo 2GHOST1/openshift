@@ -1,0 +1,64 @@
+--------------------------------------
+
+Firstly create Virtual Mashine Master and Worker 
+
+Where we will create storage and cpu processer  - > 50 GB , 8 CPU, 16 RAM 
+Network - > 10.43.0.0/24 Pool (10.43.0.20*'master', 10.43.0.21*'worker')
+
+On Each system we will set Hostname ( master.openshift, worker.openshift )
+
+First Step - > 
+
+    (System Setup For running Openshift Cluster)
+    (In each System Master,Worker)
+     -> ssh-keygen 
+     -> copy /root/.ssh/id_rsa.pub /root/.ssh/authorized.keys
+     -> ssh-copy-id root@10.43.0.20 from worker  
+     -> ssh-copy-id root@10.43.0.21 from master
+     -> hostnamectl set-hostname master.openshift On 'Master'
+     -> hostnamectl set-hostname worker.openshift On 'Worker'
+     -> Swap off the swap memory by commenting the line /etc/fstab  "swap" where is mention and save it.
+     -> Reboot Both System
+
+Second Step - > 
+
+    (Here We will install packages for each node master as well as worker nodes)
+     -> git clone https://github.com/2GHOST1/openshift.git
+     -> cd openshift
+     -> ./install_packages.sh
+     -> Start the Docker Services and check status 
+     -> And Check Connection with each node withouth password and self hosted node.
+
+Third Step -> 
+
+      (Changes On hosts file and then copy file to /etc/ansible/hosts)
+      if You chage your hostname then you will have to chnage these values in hosts file .
+      -> openshift_public_hostname=master.openshift
+      -> openshift_master_default_subdomain=master.openshift
+      -> master.openshift inventory_hostname=master.openshift
+      -> master.openshift ansible_host=master.openshift ansible_user=root
+      -> master.openshift openshift_node_group_name='node-config-master'
+      -> worker.openshift openshift_node_group_name='node-config-infra'
+      
+ 
+Fourth Step ->
+    
+       ( Fetch openshift-ansible repository from official website github 3.11 specific Version )
+       -> git clone https://github.com/openshift/openshift-ansible.git -b release-3.11 --depth=1
+       -> cd openshift-ansible
+       -> ansible-playbook -i /etc/ansible/hosts playbooks/prerequisites.yml
+       -> if this steps initialized withouth error then we will run Deployment Command for Deploying Cluster
+       -> ansible-playbook -i /etc/ansible/hosts openshift-ansible/playbooks/deploy_cluster.yml
+       -> It will take all about 30 minute for installing and steup cluster.
+      
+
+Fift Step ->
+
+        (After installing access the web console)
+        -> Before Accessing web mail we will have to change admin user name password 
+        -> htpasswd -b /etc/origin/master/htpasswd admin admin123
+        ->  https://master.openshift:8443
+            put on web console username and password 
+           admin 
+           admin123    
+
